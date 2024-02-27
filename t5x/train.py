@@ -48,6 +48,8 @@ from t5x import trainer as trainer_lib
 from t5x import utils
 import tensorflow as tf
 # pylint:enable=g-import-not-at-top
+from flax.traverse_util import flatten_dict, unflatten_dict
+
 
 # pylint:enable=g-import-not-at-top
 
@@ -308,6 +310,7 @@ def train(
       partitioner=partitioner,
       data_layout=data_layout,
   )
+  logging.info(f'train_iter.element_spec: {train_iter.element_spec}')
   input_shapes = jax.tree_map(
       lambda x: (data_layout.batch_size, *x.shape[1:]),
       train_iter.element_spec,
@@ -421,9 +424,15 @@ def train(
   # 3. If no checkpoint to restore, init from scratch.
   train_state = train_state or train_state_initializer.from_scratch(init_rng)
   num_params = sum(np.prod(p.shape) for p in jax.tree_leaves(train_state.params))
-  print(f'num_params: {num_params}')
+  logging.info(f'num_params: {num_params}')
   
   train_state_axes = train_state_initializer.train_state_axes
+  # lsp
+  for k, v in flatten_dict(train_state_axes.params).items():
+    k = '.'.join(k)
+    logging.info(f'================== train_state_axes==================')
+    logging.info(f'{k}: {v}')
+
   init_or_restore_secs = time.time() - init_or_restore_tick
   logging.info(
       'Initialize/restore complete (%.2f seconds).', init_or_restore_secs

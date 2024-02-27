@@ -8,12 +8,14 @@ python3 -m pip install https://storage.googleapis.com/cloud-tpu-tpuvm-artifacts/
 
 pip install git+https://github.com/google-research/jestimator
 pip install protobuf==3.20.3
-git clone --branch=main https://github.com/Lisennlp/t5x.git
 
-cd t5x
+git clone --branch=main https://github.com/Lisennlp/t5x.git
+cd ~/t5x
 pip install -e .
 
-pip install flax
+
+cd ~
+pip install flax==0.7.1
 
 echo y | python3 -m pip uninstall t5[gcp]
 echo y | python3 -m pip uninstall t5
@@ -27,7 +29,8 @@ echo y | python3 -m pip uninstall seqio-nightly
 git clone  --branch=main https://github.com/XueFuzhao/seqio.git
 cd seqio
 python3 setup.py install
-cd ../..
+
+cd ~
 git clone  --branch=main https://github.com/Lisennlp/flaxformer.git
 cd flaxformer
 pip install -e .
@@ -54,4 +57,9 @@ git clone https://github.com/google/aqt.git
 cd aqt
 python3 setup.py install
 
+
+
 pip install -f https://storage.googleapis.com/jax-releases/libtpu_releases.html jax[tpu]==0.4.16
+pip install tf_keras
+# tensorflow_datasets
+

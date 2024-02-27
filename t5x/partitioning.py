@@ -1074,10 +1074,14 @@ class PjitPartitioner(BasePjitPartitioner):
           (k, ('replica', 'data') if k == 'batch' else v)
           for k, v in logical_axis_rules
       )
+      #  (('batch', ('expert', 'data')), ('vocab', 'model'), ('mlp', 'model'), ('heads', 'model'), ('kv', None), ('joi
+# ned_kv', 'model'), ('embed', 'model'), ('relpos_buckets', None), ('abspos_buckets', None), ('length', None), ('layers', None), ('stack'
+# , None), ('mlp_activations', None), ('expert', 'expert'), ('expert_mlp', 'model'), ('expert_replicas', 'data'), ('unmodeled', None))
     self._logical_axis_rules = tuple(logical_axis_rules)
     (self._data_axis,) = flax_partitioning.logical_to_mesh_axes(
         ['batch'], self._logical_axis_rules
     )
+    print(f'self._data_axis: {self._data_axis}')
 
   def partition(
       self,
@@ -1095,7 +1099,10 @@ class PjitPartitioner(BasePjitPartitioner):
         static_argnums=static_argnums,
         donate_argnums=donate_argnums,
     )
-
+    print(f'self.mesh: {self.mesh}')
+    print(f'self._logical_axis_rules: {self._logical_axis_rules}')
+    print(f'in_axis_resources: {in_axis_resources}')
+    print(f'out_axis_resources: {out_axis_resources}')
     return PjittedFnWithContext(pjitted, self.mesh, self._logical_axis_rules)
 
   @property

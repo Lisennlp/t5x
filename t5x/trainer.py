@@ -519,6 +519,11 @@ class BaseTrainer(abc.ABC):
                                     step_num)
         with jax.profiler.StepTraceAnnotation("train", step_num=step_num):
           batch = next(batch_iter)
+          if step_num == 0:
+            logging.info(f'batch: {batch}')
+            for k, v in batch.items():
+                lt0 = (v > 0)
+                logging.info(k, v.shape, v.max(), lt0.sum())
           train_state, metrics_update = train_step_fn(train_state, batch)
           if metrics:
             metrics = merge_metrics(metrics, metrics_update)

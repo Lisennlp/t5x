@@ -682,16 +682,26 @@ class ShardedDatasetIterator(clu.data.dataset_iterator.DatasetIterator):
     self._partitioner = partitioner
 
   def __next__(self):
-    return _create_sharded_array(
+    d = _create_sharded_array(
         self._partitioner, self._global_shapes, next(self._iterator)
     )
+
+    d = jax.tree_map(
+            lambda x: x[:, :x.shape[1] // 2],
+            d,
+        )
+    return d
 
   def reset(self):
     return self._iterator.reset()
 
   @property
   def element_spec(self):
-    return self._iterator.element_spec
+    inputs_shape_dtype = jax.tree_map(
+            lambda x: jax.ShapeDtypeStruct(shape=(x.shape[0], x.shape[1] // 2), dtype=x.dtype),
+            self._iterator.element_spec,
+        )
+    return inputs_shape_dtype
 
   def save(self, filename):
     return self._iterator.save(filename)
@@ -1987,6 +1997,25 @@ def get_dataset_inner(
     )
 
   in_memory_shuffle = cfg.shuffle
+
+  kwargs = dict(
+        sequence_length=cfg.task_feature_lengths,
+        split=cfg.split,
+        shuffle=in_memory_shuffle,
+        num_epochs=num_epochs,
+        shard_info=shard_info,
+        use_cached=cfg.use_cached,
+        seed=seed,
+        trim_output_features=cfg.trim_output_features,
+    )
+  ds = seqio.get_dataset(**kwargs)
+
+
+  ds = feature_converter_cls(
+        ds, task_feature_lengths=cfg.task_feature_lengths
+    )
+  return ds
+
   return seqio.get_dataset(
       mixture_or_task_name=mixture_or_task,
       task_feature_lengths=cfg.task_feature_lengths,
